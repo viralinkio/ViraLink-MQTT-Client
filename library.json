@@ -1,0 +1,37 @@
+{
+  "name": "Viralink_Arduino_SDK",
+  "version": "0.0.40",
+  "description": "A SDK and Examples for Viralink IoT Paltform",
+  "keywords": "Viralink, Arduino",
+  "authors": [
+    {
+      "name": "Viralink.io",
+      "url": "https://viralink.io",
+      "maintainer": true
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/viralinkio/Arduino-SDK.git"
+  },
+  "homepage": "https://github.com/viralinkio/Arduino-SDK.git",
+  "export": {
+    "include": [
+      "src/*",
+      "examples/*"
+    ]
+  },
+  "dependencies": {
+    "openslab-osu/SSLClient": "1.6.11",
+    "knolleary/PubSubClient": "2.8",
+    "bblanchon/ArduinoJson": "6.18.5"
+  },
+  "frameworks": [
+    "arduino"
+  ],
+  "platforms": [
+    "espressif32",
+    "espressif8266"
+  ],
+  "examples": "examples/*/*.cpp"
+}
