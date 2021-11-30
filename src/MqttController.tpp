@@ -25,7 +25,7 @@ public:
 
     MQTTController(int queueSize = 512);
 
-    void updateSendAttributesInterval(float seconds);
+    void updateSendSystemAttributesInterval(float seconds);
 
     bool isConnected() const;
 
@@ -49,6 +49,8 @@ public:
 
     bool sendTelemetry(const String &json);
 
+    bool sendClaimRequest(const String &key, uint32_t duration_ms);
+
     void registerCallbackRawPayload(const MqttCallbackRawPayload &callback);
 
     void registerCallbackJsonPayload(const MqttCallbackJsonPayload &callback);
@@ -59,7 +61,7 @@ public:
 
     void resetBufferSize();
 
-    void sendDefaultAttributes(bool isSendAttributes);
+    void sendSystemAttributes(bool isSendAttributes);
 
 private:
     Queue<MQTTMessage> *queue;
@@ -136,9 +138,10 @@ void MQTTController::on_message(const char *tp, uint8_t *payload, unsigned int l
         auto it = requestsCallbacksJson.begin();
         for (int i = 0; i < requestsCallbacksJson.size(); i++) {
             if (it->first == topicId) {
-                it->second(topic, data);
-                requestsCallbacksJson.erase(topicId);
-                return;
+                if (it->second(topic, data)) {
+                    requestsCallbacksJson.erase(topicId);
+                    return;
+                } else break;
             }
             it++;
         }
@@ -203,23 +206,23 @@ void MQTTController::loop() {
 #ifdef INC_FREERTOS_H
     if (xSemaphoreTake(semaQueue, portMAX_DELAY)) {
 #endif
-        if (queue != nullptr && !queue->isEmpty() && isConnected()) {
-            MQTTMessage message = queue->peek();
-            if (mqttClient->publish(message.getTopic().c_str(), message.getPayload().c_str())) {
+    if (queue != nullptr && !queue->isEmpty() && isConnected()) {
+        MQTTMessage message = queue->peek();
+        if (mqttClient->publish(message.getTopic().c_str(), message.getPayload().c_str())) {
+            queue->removeLastPeek();
+        } else {
+            message.incrementRetry();
+            if (message.getRetry() >= 5) {
+                printDBGln("Could Not Publish");
+                printDBGln(message.getTopic());
+                printDBGln(message.getPayload());
                 queue->removeLastPeek();
-            } else {
-                message.incrementRetry();
-                if (message.getRetry() >= 5) {
-                    printDBGln("Could Not Publish");
-                    printDBGln(message.getTopic());
-                    printDBGln(message.getPayload());
-                    queue->removeLastPeek();
-                }
             }
         }
-#ifdef INC_FREERTOS_H
-        xSemaphoreGive(semaQueue);
     }
+#ifdef INC_FREERTOS_H
+    xSemaphoreGive(semaQueue);
+}
 #endif
 
     if (isSendAttributes && ((millis - lastSendAttributes) > ((uint64_t) (updateInterval * 1000)))) {
@@ -302,7 +305,7 @@ void MQTTController::sendAttributesFunc() {
     addToPublishQueue(V1_Attributes_TOPIC, data.as<String>());
 }
 
-void MQTTController::updateSendAttributesInterval(float seconds) {
+void MQTTController::updateSendSystemAttributesInterval(float seconds) {
     updateInterval = seconds;
 }
 
@@ -316,12 +319,12 @@ bool MQTTController::addToPublishQueue(const String &topic, const String &payloa
 #ifdef INC_FREERTOS_H
     if (xSemaphoreTake(semaQueue, portMAX_DELAY)) {
 #endif
-        MQTTMessage message(topic, payload);
-        if (queue != nullptr && queue->push(message)) result = true;
-        else result = false;
+    MQTTMessage message(topic, payload);
+    if (queue != nullptr && queue->push(message)) result = true;
+    else result = false;
 #ifdef INC_FREERTOS_H
-        xSemaphoreGive(semaQueue);
-    }
+    xSemaphoreGive(semaQueue);
+}
 #endif
     return result;
 }
@@ -354,6 +357,14 @@ bool MQTTController::sendTelemetry(const String &json) {
     return addToPublishQueue(V1_TELEMETRY_TOPIC, json);
 }
 
+bool MQTTController::sendClaimRequest(const String &key, uint32_t duration_ms) {
+    DynamicJsonDocument data(200);
+    data["secretKey"] = key;
+    data["durationMs"] = duration;
+    data.shrinkToFit();
+    return addToPublishQueue("v1/devices/me/claim", data.as<String>());
+}
+
 void MQTTController::setTimeout(int timeout_ms) {
     this->timeout = timeout_ms;
 }
@@ -366,7 +377,7 @@ void MQTTController::resetBufferSize() {
     mqttClient->setBufferSize(defaultBufferSize);
 }
 
-void MQTTController::sendDefaultAttributes(bool value) {
+void MQTTController::sendSystemAttributes(bool value) {
     MQTTController::isSendAttributes = value;
 }
 

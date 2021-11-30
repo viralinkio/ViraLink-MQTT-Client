@@ -1,5 +1,8 @@
 #include <Arduino.h>
 
+#define CURRENT_FIRMWARE_TITLE "OTA_EXAMPLE"
+#define CURRENT_FIRMWARE_VERSION "1"
+
 #define VIRALINK_DEBUG // enable debug on SerialMon
 #define SerialMon Serial // if you need DEBUG SerialMon should be defined
 
@@ -8,28 +11,20 @@
 
 #define VIRALINK_TOKEN "xxxxxxx"
 #define VIRALINK_MQTT_URL "console.viralink.io"
-#define VIRALINK_MQTT_PORT 8883
+#define VIRALINK_MQTT_PORT 1883
 
 #include "viralink.h"
-// this library is avaible on  https://github.com/OPEnSLab-OSU/SSLClient
-// tested version : openslab-osu/SSLClient @ ^1.6.11
-#include <SSLClient.h>
-#include "certificates.h" // This file must be auto generated
 
-#ifdef ESP32
-
+#if defined(ESP32)
 #include "WiFi.h"
-
 #elif defined(ESP8266)
-
 #include "ESP8266WiFi.h"
-
 #endif
 
 WiFiClient client;
-// A5 is a random pin that used for generating real random data for encryption
-SSLClient sslClient(client, TAs, (size_t) TAs_NUM, A5);
 MQTTController mqttController;
+// more chunkSize need more RAM so if you have not enough memory try to use smal chunkSize such as 2048 byte
+MQTTOTA ota(&mqttController, 10240);
 
 bool on_message(const String &topic, DynamicJsonDocument json) {
 
@@ -61,13 +56,18 @@ void setup() {
     Serial.println(WiFi.localIP());
 
     mqttController.init();
-    mqttController.connect(&sslClient, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
+
+    mqttController.connect(&client, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
                            nullptr, []() {
                 Serial.println("Connected To Platform");
+                // ota.begin should called after mqttController.init()
+                ota.begin(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
             });
 
 }
 
 void loop() {
+
+    // on ESP32 it is recommended to use mqtt_esp32_multiCore Example to get More Reliable Update
     mqttController.loop();
 }

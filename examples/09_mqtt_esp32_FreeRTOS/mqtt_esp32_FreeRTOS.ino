@@ -1,5 +1,8 @@
 #include <Arduino.h>
 
+#define CURRENT_FIRMWARE_TITLE "OTA_EXAMPLE"
+#define CURRENT_FIRMWARE_VERSION "1"
+
 #define VIRALINK_DEBUG // enable debug on SerialMon
 #define SerialMon Serial // if you need DEBUG SerialMon should be defined
 
@@ -12,45 +15,33 @@
 
 #include "viralink.h"
 
-#ifdef ESP32
+#include <esp_task_wdt.h>
 
+#if defined(ESP32)
 #include "WiFi.h"
-
 #elif defined(ESP8266)
-
 #include "ESP8266WiFi.h"
-
 #endif
 
-MQTTController mqttController;
 WiFiClient client;
+MQTTController mqttController;
+// more chunkSize need more RAM so if you have not enough memory try to use smal chunkSize such as 2048 byte
+MQTTOTA ota(&mqttController, 10240);
 
 bool on_message(const String &topic, DynamicJsonDocument json) {
 
-    if (json.containsKey("method")) {
-        String methodName = json["method"];
-        Serial.print("MethodName: ");
-        Serial.println(methodName);
+    Serial.println("New Message: ");
+    Serial.print("Topic: ");
+    Serial.println(topic);
+    Serial.print("Data [json]: ");
+    Serial.println(json.as<String>());
 
-        if (json.containsKey("params")) {
-            String params = json["params"];
-            Serial.print("Params: ");
-            Serial.println(params);
-        }
-
-        if (methodName.equals("setLEDStatus"))
-            digitalWrite(LED_BUILTIN, json["params"]["enabled"]);
-
-        if (methodName.equals("getLEDStatus")) {
-            String responseTopic = String(topic);
-            responseTopic.replace("request", "response");
-            DynamicJsonDocument responsePayload(100);
-            responsePayload[String(LED_BUILTIN)] = digitalRead(LED_BUILTIN) ? "ON" : "OFF";
-            mqttController.addToPublishQueue(responseTopic, responsePayload.as<String>());
-        }
-
-    }
     return true;
+}
+
+void mqttLoop(void *parameter) {
+    while (true)
+        mqttController.loop();
 }
 
 void setup() {
@@ -72,13 +63,26 @@ void setup() {
     Serial.println(WiFi.localIP());
 
     mqttController.init();
+
     mqttController.connect(&client, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
                            nullptr, []() {
                 Serial.println("Connected To Platform");
+                // ota.begin should called after mqttController.init()
+                ota.begin(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
             });
 
+    delay(1000);
+    disableCore0WDT();
+    xTaskCreatePinnedToCore(
+            mqttLoop, // Function to implement the task
+            "MQTT_Loop", // Name of the task
+            10000, // Stack size in words
+            NULL,  // Task input parameter
+            0, // Priority of the task
+            NULL,  // Task handle.
+            0); // Core where the task should run
 }
 
 void loop() {
-    mqttController.loop();
+
 }
