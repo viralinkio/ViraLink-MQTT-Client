@@ -39,7 +39,10 @@ public:
 
     PubSubClient *getMqttClient() const;
 
-    virtual ~MQTTController() { delete mqttClient; }
+    virtual ~MQTTController() {
+        delete mqttClient;
+        delete client;
+    }
 
     bool addToPublishQueue(const String &topic, const String &payload);
 
@@ -165,6 +168,7 @@ MQTTController::connect(Client *Client, String Id, String username_in, String pa
                         MQTTController::DefaultMqttCallbackRawPayload callbackRaw,
                         MQTTController::ConnectionEvent connectionEvent) {
 
+    delete client;
     this->client = Client;
     this->id = Id;
     this->username = username_in;
@@ -360,7 +364,7 @@ bool MQTTController::sendTelemetry(const String &json) {
 bool MQTTController::sendClaimRequest(const String &key, uint32_t duration_ms) {
     DynamicJsonDocument data(200);
     data["secretKey"] = key;
-    data["durationMs"] = duration;
+    data["durationMs"] = duration_ms;
     data.shrinkToFit();
     return addToPublishQueue("v1/devices/me/claim", data.as<String>());
 }
