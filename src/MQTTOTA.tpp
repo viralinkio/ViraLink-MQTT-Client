@@ -84,7 +84,7 @@ bool MQTTOTA::handleMessage(String topic, DynamicJsonDocument json) {
         mqttController->addToPublishQueue(V1_TELEMETRY_TOPIC, status.as<String>());
 
         mqttController->setTimeout(30000);
-        if (!mqttController->getMqttClient()->setBufferSize(chunkSize + 50)) {
+        if (!mqttController->setBufferSize(chunkSize + 50)) {
             mqttController->resetTimeout();
             mqttController->resetBufferSize();
             printDBGln("NOT ENOUGH RAM!");

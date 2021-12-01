@@ -21,32 +21,38 @@ private:
     bool autoConnect, autoReconnect;
     uint32_t autoReconnectCheckPeriod;
     uint64_t lastCheckedConnectionMS;
-//    OnConnectionEvent connectedEvent, timeoutEvent;
 
 public:
     void addNetworkInterface(const NetworkInterface &networkInterface);
 
-    bool connectToNetwork(NetworkInterface *targetNetwork, OnConnectionEvent onConnectedEvent = nullptr,
-                          OnConnectionEvent onTimeoutEvent = nullptr);
+    bool connectToNetwork(NetworkInterface *targetNetwork);
+
+    bool connectToNetwork(uint8_t id);
 
     void loop();
 
-    void autoConnectToNetwork(OnConnectionEvent onConnectedEvent = nullptr, OnConnectionEvent onTimeoutEvent = nullptr);
+    void autoConnectToNetwork();
 
     short findNetworkInterfaceIndexById(uint8_t id);
 
     short findNetworkInterfaceIndexByReference(NetworkInterface *networkInterface);
 
     void setAutoReconnect(bool autoReconnectValue, uint32_t connectionCheckPeriodValue = 3000);
+
+    NetworkInterface *getCurrentNetworkInterface();
 };
 
 void NetworkInterfacesController::addNetworkInterface(const NetworkInterface &networkInterface) {
     networkInterfaces.push_back(networkInterface);
 }
 
-bool NetworkInterfacesController::connectToNetwork(NetworkInterface *targetNetwork,
-                                                   OnConnectionEvent onConnectedEvent,
-                                                   OnConnectionEvent onTimeoutEvent) {
+bool NetworkInterfacesController::connectToNetwork(uint8_t id) {
+    short index = findNetworkInterfaceIndexById(id);
+    if (index != -1) return connectToNetwork(&networkInterfaces[findNetworkInterfaceIndexById(id)]);
+    return false;
+}
+
+bool NetworkInterfacesController::connectToNetwork(NetworkInterface *targetNetwork) {
 
     if (targetNetwork == nullptr) {
         printDBG("Network Interface Can not be NULL");
@@ -61,8 +67,6 @@ bool NetworkInterfacesController::connectToNetwork(NetworkInterface *targetNetwo
 
     currentTryingInterfaceIndex = index;
     autoConnect = false;
-//    this->connectedEvent = onConnectedEvent;
-//    this->timeoutEvent = onTimeoutEvent;
     if (!networkInterfaces[currentTryingInterfaceIndex].connect()) return false;
     return true;
 }
@@ -115,8 +119,7 @@ void NetworkInterfacesController::loop() {
 
 }
 
-void NetworkInterfacesController::autoConnectToNetwork(OnConnectionEvent onConnectedEvent,
-                                                       OnConnectionEvent onTimeoutEvent) {
+void NetworkInterfacesController::autoConnectToNetwork() {
 
     if (networkInterfaces.empty()) {
         printDBGln("Network Interfaces are empty.");
@@ -124,8 +127,6 @@ void NetworkInterfacesController::autoConnectToNetwork(OnConnectionEvent onConne
     }
     sort(networkInterfaces.begin(), networkInterfaces.end(), compareInterval);
     autoConnect = true;
-//    this->connectedEvent = onConnectedEvent;
-//    this->timeoutEvent = onTimeoutEvent;
     currentTryingInterfaceIndex = 0;
     networkInterfaces[currentTryingInterfaceIndex].connect();
 }
@@ -149,6 +150,14 @@ short NetworkInterfacesController::findNetworkInterfaceIndexByReference(NetworkI
 void NetworkInterfacesController::setAutoReconnect(bool autoReconnectValue, uint32_t connectionCheckPeriodValue) {
     NetworkInterfacesController::autoReconnect = autoReconnectValue;
     autoReconnectCheckPeriod = connectionCheckPeriodValue;
+}
+
+NetworkInterface *NetworkInterfacesController::getCurrentNetworkInterface() {
+    if (!networkInterfaces.empty() && currentTryingInterfaceIndex >= 0 &&
+        currentTryingInterfaceIndex < networkInterfaces.size())
+        return &networkInterfaces[currentTryingInterfaceIndex];
+
+    return nullptr;
 }
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef VIRALINK_H
 #define VIRALINK_H
 
-#define SDK_VERSION "0.0.45"
+#define SDK_VERSION "0.0.46"
 
 #include <Arduino.h>
 #include "Uptime.h"

@@ -27,9 +27,9 @@ public:
 
     void updateSendSystemAttributesInterval(float seconds);
 
-    bool isConnected() const;
+    bool isConnected();
 
-    void connect(Client *client, String id, String username, String pass, String url, uint16_t port,
+    void connect(Client &client, String id, String username, String pass, String url, uint16_t port,
                  DefaultMqttCallbackJsonPayload callback, DefaultMqttCallbackRawPayload callbackRaw = nullptr,
                  ConnectionEvent connectionEvent = nullptr);
 
@@ -37,12 +37,7 @@ public:
 
     void loop();
 
-    PubSubClient *getMqttClient() const;
-
-    virtual ~MQTTController() {
-        delete mqttClient;
-        delete client;
-    }
+    bool setBufferSize(uint16_t chunkSize);
 
     bool addToPublishQueue(const String &topic, const String &payload);
 
@@ -71,8 +66,7 @@ private:
 #ifdef INC_FREERTOS_H
     SemaphoreHandle_t semaQueue;
 #endif
-    PubSubClient *mqttClient;
-    Client *client;
+    PubSubClient mqttClient;
     float updateInterval = 10;
     uint64_t lastSendAttributes;
     uint64_t connectionRecheckTimeout;
@@ -158,18 +152,16 @@ void MQTTController::on_message(const char *tp, uint8_t *payload, unsigned int l
     if (defaultCallbackRaw != nullptr) defaultCallbackRaw(tp, payload, length);
 }
 
-bool MQTTController::isConnected() const {
-    return mqttClient != nullptr && mqttClient->connected();
+bool MQTTController::isConnected() {
+    return mqttClient.connected();
 }
 
 void
-MQTTController::connect(Client *Client, String Id, String username_in, String password, String url_in, uint16_t port_in,
+MQTTController::connect(Client &client, String Id, String username_in, String password, String url_in, uint16_t port_in,
                         MQTTController::DefaultMqttCallbackJsonPayload callback,
                         MQTTController::DefaultMqttCallbackRawPayload callbackRaw,
                         MQTTController::ConnectionEvent connectionEvent) {
 
-    delete client;
-    this->client = Client;
     this->id = Id;
     this->username = username_in;
     this->pass = password;
@@ -180,12 +172,10 @@ MQTTController::connect(Client *Client, String Id, String username_in, String pa
     this->defaultCallback = callback;
     this->defaultCallbackRaw = callbackRaw;
 
-    delete mqttClient;
-
-    mqttClient = new PubSubClient(*client);
-    mqttClient->setBufferSize(2048);
-    mqttClient->setServer(url.c_str(), port);
-    mqttClient->setCallback([&](const char *tp, uint8_t *payload, unsigned int length) {
+    this->mqttClient.setClient(client);
+    mqttClient.setBufferSize(2048);
+    mqttClient.setServer(url.c_str(), port);
+    mqttClient.setCallback([&](const char *tp, uint8_t *payload, unsigned int length) {
         on_message(tp, payload, length);
     });
 
@@ -205,28 +195,28 @@ void MQTTController::init() {
 
 void MQTTController::loop() {
     uint64_t millis = Uptime.getMilliseconds();
-    if (mqttClient != nullptr) mqttClient->loop();
+    mqttClient.loop();
 
 #ifdef INC_FREERTOS_H
     if (xSemaphoreTake(semaQueue, portMAX_DELAY)) {
 #endif
-    if (queue != nullptr && !queue->isEmpty() && isConnected()) {
-        MQTTMessage message = queue->peek();
-        if (mqttClient->publish(message.getTopic().c_str(), message.getPayload().c_str())) {
-            queue->removeLastPeek();
-        } else {
-            message.incrementRetry();
-            if (message.getRetry() >= 5) {
-                printDBGln("Could Not Publish");
-                printDBGln(message.getTopic());
-                printDBGln(message.getPayload());
+        if (queue != nullptr && !queue->isEmpty() && isConnected()) {
+            MQTTMessage message = queue->peek();
+            if (mqttClient.publish(message.getTopic().c_str(), message.getPayload().c_str())) {
                 queue->removeLastPeek();
+            } else {
+                message.incrementRetry();
+                if (message.getRetry() >= 5) {
+                    printDBGln("Could Not Publish");
+                    printDBGln(message.getTopic());
+                    printDBGln(message.getPayload());
+                    queue->removeLastPeek();
+                }
             }
         }
-    }
 #ifdef INC_FREERTOS_H
-    xSemaphoreGive(semaQueue);
-}
+        xSemaphoreGive(semaQueue);
+    }
 #endif
 
     if (isSendAttributes && ((millis - lastSendAttributes) > ((uint64_t) (updateInterval * 1000)))) {
@@ -242,21 +232,21 @@ void MQTTController::loop() {
     if (!isConnected()) {
         //todo: fixbug: not reConnect to cloud after invalid token
         printDBG(String("Connecting to MQTT server... "));
-        if (mqttClient->connect(id.c_str(), username.c_str(), pass.c_str())) {
+        if (mqttClient.connect(id.c_str(), username.c_str(), pass.c_str())) {
             printDBGln("[Connected]");
             if (isSendAttributes)
                 addToPublishQueue(V1_Attributes_TOPIC, getChipInfo());
 
-            mqttClient->subscribe("v1/devices/me/rpc/request/+");
-            mqttClient->subscribe("v1/devices/me/attributes/response/+");
-            mqttClient->subscribe(V1_Attributes_TOPIC);
-            mqttClient->subscribe("v2/fw/response/+");
+            mqttClient.subscribe("v1/devices/me/rpc/request/+");
+            mqttClient.subscribe("v1/devices/me/attributes/response/+");
+            mqttClient.subscribe(V1_Attributes_TOPIC);
+            mqttClient.subscribe("v2/fw/response/+");
 
             if (connectedEvent != nullptr) connectedEvent();
 
         } else {
             printDBG("[FAILED] [ rc = ");
-            printDBG(String(mqttClient->state()));
+            printDBG(String(mqttClient.state()));
             printDBGln(String(" : retrying in " + String(timeout / 1000) + " seconds]"));
         }
     }
@@ -313,8 +303,8 @@ void MQTTController::updateSendSystemAttributesInterval(float seconds) {
     updateInterval = seconds;
 }
 
-PubSubClient *MQTTController::getMqttClient() const {
-    return mqttClient;
+bool MQTTController::setBufferSize(uint16_t chunkSize) {
+    return mqttClient.setBufferSize(chunkSize);
 }
 
 bool MQTTController::addToPublishQueue(const String &topic, const String &payload) {
@@ -323,12 +313,12 @@ bool MQTTController::addToPublishQueue(const String &topic, const String &payloa
 #ifdef INC_FREERTOS_H
     if (xSemaphoreTake(semaQueue, portMAX_DELAY)) {
 #endif
-    MQTTMessage message(topic, payload);
-    if (queue != nullptr && queue->push(message)) result = true;
-    else result = false;
+        MQTTMessage message(topic, payload);
+        if (queue != nullptr && queue->push(message)) result = true;
+        else result = false;
 #ifdef INC_FREERTOS_H
-    xSemaphoreGive(semaQueue);
-}
+        xSemaphoreGive(semaQueue);
+    }
 #endif
     return result;
 }
@@ -378,7 +368,7 @@ void MQTTController::resetTimeout() {
 }
 
 void MQTTController::resetBufferSize() {
-    mqttClient->setBufferSize(defaultBufferSize);
+    mqttClient.setBufferSize(defaultBufferSize);
 }
 
 void MQTTController::sendSystemAttributes(bool value) {

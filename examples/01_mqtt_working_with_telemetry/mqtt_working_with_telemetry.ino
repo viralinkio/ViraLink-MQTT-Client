@@ -84,7 +84,7 @@ void setup() {
     mqttController.init();
     // sendSystemAttributes send some basic info to the platform like upTime, Free Heap
     mqttController.sendSystemAttributes(true);
-    mqttController.connect(&client, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
+    mqttController.connect(client, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
                            nullptr, []() {
                 Serial.println("Connected To Platform");
             });

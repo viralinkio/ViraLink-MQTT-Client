@@ -48,7 +48,7 @@ void setup() {
     Serial.println(WiFi.localIP());
 
     mqttController.init();
-    mqttController.connect(&client, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
+    mqttController.connect(client, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
                            nullptr, []() {
                 Serial.println("Connected To Platform");
             });
