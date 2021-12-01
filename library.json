@@ -1,6 +1,6 @@
 {
   "name": "Viralink_Arduino_SDK",
-  "version": "0.0.43",
+  "version": "0.0.45",
   "description": "A SDK and Examples for Viralink IoT Paltform",
   "keywords": "Viralink, Arduino",
   "authors": [
@@ -22,6 +22,7 @@
     ]
   },
   "dependencies": {
+    "vshymanskyy/TinyGSM": "0.11.5",
     "openslab-osu/SSLClient": "1.6.11",
     "knolleary/PubSubClient": "2.8",
     "bblanchon/ArduinoJson": "6.18.5"
