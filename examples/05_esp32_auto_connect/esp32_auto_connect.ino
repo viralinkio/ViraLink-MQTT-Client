@@ -8,9 +8,7 @@
 #include "NetworkController.tpp"
 
 #if defined(ESP32)
-
 #include "WiFi.h"
-
 #elif defined(ESP8266)
 #include "ESP8266WiFi.h"
 #endif
@@ -32,10 +30,8 @@ NetworkInterface lanInterface("lan8720", 3, 1);
 NetworkInterface wifiInterface("wifi", 1, 2, 10000);
 NetworkInterface modemInterface("modem", 2, 3);
 
-//#define WIFI_SSID "Vira Afzar Co Ltd."
-//#define WIFI_PASSWORD "!ceC@d3#TE@M"
-#define WIFI_SSID "HG@HOME_NEW"
-#define WIFI_PASSWORD "HG@HOME@#"
+#define WIFI_SSID "xxxxxxx"
+#define WIFI_PASSWORD "xxxxxxx"
 #define SIM_APN "apn"
 
 NetworkInterfacesController networkController;
