@@ -28,4 +28,4 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade platformio
     - name: Run PlatformIO
-      run: pio run -e Simple_ESP32_Devkit_v1
+      run: pio run -e esp8266_01 -e esp32_01 -e esp8266_02 -e esp32_02 -e esp8266_03 -e esp32_03 -e esp32_04 -e esp32_05 -e esp8266_08 -e esp32_08 -e esp32_09
