@@ -7,9 +7,11 @@ This library helps you to connect viralink.io server with The most used examples
 ## Features
 1. Connect to [viralink.io](https://viralink.io) or any Thingsboard server via MQTT Protocol.
 2. Send Telemetry and Attributes to Server
-4. OTA Update via MQTT. (Only supports esp8266 and esp32)
-5. Implement the queue for queuing the mqtt messages when not connected to server to prevent data lost
-6. Implement custom Uptime class instead of millis(). millis() only support 49 days but this implementation support upto 584m year! (uint64_t milliseconds).
+3. OTA Update via MQTT. (Only supports esp8266 and esp32)
+4. Implement the queue for queuing the mqtt messages when not connected to server to prevent data lost
+5. Implement custom Uptime class instead of millis(). millis() only support 49 days but this implementation support upto 584m year! (uint64_t milliseconds).
+6. Configure your network Interfaces and Auto Connect to Interfaces base on priorities, Also you can set Auto Reconnect that will try to reconnect when interface disconnected!
+7. MQTTController.loop() can run other cores (on freeRTOS systems like esp32). 
 
 ## Supported Hardware
   * ESP8266
