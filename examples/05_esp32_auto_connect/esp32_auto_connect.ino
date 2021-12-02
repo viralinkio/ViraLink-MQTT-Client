@@ -26,6 +26,7 @@ WiFiClient ethClient;
 TinyGsm modem(SerialAT);
 TinyGsmClient tinyGsmClient(modem);
 
+//NetworkInterface(name, id, priority = 1, timeout = 30000)
 NetworkInterface lanInterface("lan8720", 3, 1);
 NetworkInterface wifiInterface("wifi", 1, 2, 10000);
 NetworkInterface modemInterface("modem", 2, 3);
