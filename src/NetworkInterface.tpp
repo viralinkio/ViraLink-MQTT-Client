@@ -93,12 +93,16 @@ public:
 };
 
 bool NetworkInterface::connect() {
-    if (connectInterface != nullptr)
-        if (connectInterface()) {
-            startTryingTimeMS = Uptime.getMilliseconds();
-            tryingToConnect = true;
-            return true;
-        }
+    if (connectInterface == nullptr) {
+        printDBG("Connect Interface SHOULD NOT be NULL");
+        return false;
+    }
+
+    if (connectInterface()) {
+        startTryingTimeMS = Uptime.getMilliseconds();
+        tryingToConnect = true;
+        return true;
+    }
     return false;
 }
 
