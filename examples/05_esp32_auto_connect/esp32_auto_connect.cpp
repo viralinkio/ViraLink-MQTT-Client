@@ -5,7 +5,7 @@
 
 #include "viralink.h"
 
-#include "NetworkController.tpp"
+#include "NetworkController.h"
 
 #if defined(ESP32)
 #include "WiFi.h"
@@ -41,8 +41,6 @@ void setup() {
 
     SerialMon.begin(115200);
     Serial.println();
-
-    printDBGln("HIII");
 
     wifiInterface.setConnectInterface([]() -> bool {
         Serial.print("Connecting To WiFi ");

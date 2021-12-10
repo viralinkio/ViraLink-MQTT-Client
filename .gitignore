@@ -3,4 +3,3 @@ CMakeListsPrivate.txt
 cmake-build-*/ 
 /.idea/
 /CMakeLists.txt
-/src/main.cpp

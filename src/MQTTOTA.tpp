@@ -23,13 +23,27 @@ class MQTTOTA {
 public:
     bool begin(String current_fw_title, String current_fw_version);
 
+    bool checkForUpdate();
+
     MQTTOTA(MQTTController *mqttController, uint16_t chunkSize);
+
+    void startHandleOTAMessages(){
+        enabled = true;
+    }
+
+    void stopHandleOTAMessages(){
+        enabled = false;
+    }
 
 private:
     String current_fw_title, current_fw_version;
     MQTTController *mqttController;
     Ticker restartTicker;
     uint16_t totalChunks, chunkSize, currentChunk, requestId;
+    bool enabled;
+    MQTTController::MqttCallbackJsonPayload callbackJson = [this](String topic, DynamicJsonDocument json) -> bool {
+        return handleMessage(topic, json);
+    };
 
     bool handleMessage(String topic, DynamicJsonDocument json);
 
@@ -45,6 +59,8 @@ bool MQTTOTA::handleMessage(String topic, DynamicJsonDocument json) {
     if (!json.containsKey(FW_CHECKSUM_ATTR) || !json.containsKey(FW_CHECKSUM_ALG_ATTR) ||
         !json.containsKey(FW_SIZE_ATTR) || !json.containsKey(FW_TITLE_ATTR) || !json.containsKey(FW_VERSION_ATTR))
         return false;
+
+    if(!enabled) return true;
 
     String targetTitle = json[FW_TITLE_ATTR].as<String>();
     String targetVersion = json[FW_VERSION_ATTR].as<String>();
@@ -143,6 +159,8 @@ bool MQTTOTA::handleMessage(String topic, DynamicJsonDocument json) {
 bool MQTTOTA::handleMessageRaw(String topic, uint8_t *payload, unsigned int length) {
     if (topic.indexOf(FW_RESPONSE_TOPIC) != 0) return false;
 
+    if(!enabled) return true;
+
     int id = topic.substring(15, topic.indexOf("/", 15)).toInt();
     if (requestId != id)
         return true;
@@ -168,6 +186,7 @@ bool MQTTOTA::handleMessageRaw(String topic, uint8_t *payload, unsigned int leng
 
 bool MQTTOTA::begin(String currentFirmwareTitle, String currentFirmwareVersion) {
     requestId = 0;
+    enabled = true;
 
     this->current_fw_title = currentFirmwareTitle;
     this->current_fw_version = currentFirmwareVersion;
@@ -178,21 +197,22 @@ bool MQTTOTA::begin(String currentFirmwareTitle, String currentFirmwareVersion) 
     data.shrinkToFit();
     mqttController->addToPublishQueue(V1_TELEMETRY_TOPIC, data.as<String>());
 
+    mqttController->registerCallbackJsonPayload(callbackJson);
+    mqttController->registerCallbackRawPayload([this](String topic, uint8_t *payload, unsigned int length) -> bool {
+        return handleMessageRaw(topic, payload, length);
+    });
+
+    checkForUpdate();
+    return true;
+}
+
+bool MQTTOTA::checkForUpdate() {
     DynamicJsonDocument requestData(300);
     requestData["sharedKeys"] = String(
             String(FW_CHECKSUM_ATTR) + "," + FW_CHECKSUM_ALG_ATTR + "," + FW_SIZE_ATTR + "," + FW_TITLE_ATTR + "," +
             FW_VERSION_ATTR);
     requestData.shrinkToFit();
-
-    MQTTController::MqttCallbackJsonPayload callbackJson = [this](String topic, DynamicJsonDocument json) -> bool {
-        return handleMessage(topic, json);
-    };
-    mqttController->requestAttributesJson(requestData.as<String>(), callbackJson);
-    mqttController->registerCallbackJsonPayload(callbackJson);
-    mqttController->registerCallbackRawPayload([this](String topic, uint8_t *payload, unsigned int length) -> bool {
-        return handleMessageRaw(topic, payload, length);
-    });
-    return false;
+    return mqttController->requestAttributesJson(requestData.as<String>(), callbackJson);
 }
 
 void MQTTOTA::requestChunkPart(int chunkPart) {

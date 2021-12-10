@@ -56,12 +56,13 @@ void setup() {
     Serial.println(WiFi.localIP());
 
     mqttController.init();
+    // ota.begin should called after mqttController.init()
+    ota.begin(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
 
     mqttController.connect(client, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
                            nullptr, []() {
                 Serial.println("Connected To Platform");
-                // ota.begin should called after mqttController.init()
-                ota.begin(CURRENT_FIRMWARE_TITLE, CURRENT_FIRMWARE_VERSION);
+                ota.checkForUpdate();
             });
 
 }

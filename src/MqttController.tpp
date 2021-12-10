@@ -194,6 +194,8 @@ void MQTTController::init() {
 }
 
 void MQTTController::loop() {
+    if (url.isEmpty() || username.isEmpty()) return;
+
     uint64_t millis = Uptime.getMilliseconds();
     mqttClient.loop();
 
@@ -226,8 +228,6 @@ void MQTTController::loop() {
 
     if ((millis - connectionRecheckTimeout) <= timeout) return;
     connectionRecheckTimeout = millis;
-
-    if (url.isEmpty() || username.isEmpty()) return;
 
     if (!isConnected()) {
         //todo: fixbug: not reConnect to cloud after invalid token

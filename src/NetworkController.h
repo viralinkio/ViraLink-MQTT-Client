@@ -4,7 +4,7 @@
 #include "PrintDBG.tpp"
 #include "Uptime.h"
 #include "map"
-#include "NetworkInterface.tpp"
+#include "NetworkInterface.h"
 #include "vector"
 
 typedef bool (*OnConnectionEvent)(NetworkInterface *networkInterface);

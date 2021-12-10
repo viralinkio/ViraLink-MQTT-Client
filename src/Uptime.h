@@ -33,7 +33,7 @@ void UptimeClass::calculateTime() {
     unsigned long now = millis();
 #if defined(ESP32)
     if (xPortGetCoreID() == 1) {
-        if (now < lastMillis)
+        if ((now < lastMillis) && ((lastMillis - now) > 1000))
             counter++;
         lastMillis = now;
     }
