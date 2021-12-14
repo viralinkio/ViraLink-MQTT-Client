@@ -1,5 +1,3 @@
-#include <Arduino.h>
-
 #define VIRALINK_DEBUG // enable debug on SerialMon
 #define SerialMon Serial // if you need DEBUG SerialMon should be defined
 
