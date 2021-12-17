@@ -109,9 +109,9 @@ void setup() {
         Serial.println(String("Connected to GSM with IP: ") + modem.localIP());
     });
 
-    networkController.addNetworkInterface(wifiInterface);
-    networkController.addNetworkInterface(lanInterface);
-    networkController.addNetworkInterface(modemInterface);
+    networkController.addNetworkInterface(&wifiInterface);
+    networkController.addNetworkInterface(&lanInterface);
+    networkController.addNetworkInterface(&modemInterface);
 
     networkController.setAutoReconnect(true);
     networkController.autoConnectToNetwork();

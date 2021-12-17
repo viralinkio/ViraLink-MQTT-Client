@@ -69,6 +69,7 @@ public:
         timeout_ms = timeoutMs;
     }
 
+    void setPriority(uint8_t priority);
 
     const String &getName() const {
         return name;
@@ -158,5 +159,9 @@ void NetworkInterface::loop() {
 
 NetworkInterface::NetworkInterface(const String &name, uint8_t id, uint8_t priority, uint32_t timeoutMs) :
         name(name), id(id), priority(priority), timeout_ms(timeoutMs) {}
+
+void NetworkInterface::setPriority(uint8_t newPriority) {
+    NetworkInterface::priority = newPriority;
+}
 
 #endif

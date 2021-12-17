@@ -40,8 +40,10 @@ bool on_message(const String &topic, DynamicJsonDocument json) {
 }
 
 void mqttLoop(void *parameter) {
-    while (true)
+    while (true){
         mqttController.loop();
+        delayMicroseconds(1);
+    }
 }
 
 void setup() {

@@ -1,29 +1,26 @@
 #ifndef VIRALINK_NETWORK_CONTROLLER_TPP
 #define VIRALINK_NETWORK_CONTROLLER_TPP
 
+#define MAX_INTERFACES_SIZE 5
+
 #include "PrintDBG.tpp"
 #include "Uptime.h"
-#include "map"
 #include "NetworkInterface.h"
-#include "vector"
 
 typedef bool (*OnConnectionEvent)(NetworkInterface *networkInterface);
-
-bool compareInterval(const NetworkInterface &i1, const NetworkInterface &i2) {
-    return (i1.getPriority() < i2.getPriority());
-}
 
 class NetworkInterfacesController {
 
 private:
-    std::vector<NetworkInterface> networkInterfaces;
+    NetworkInterface *networkInterfaces[MAX_INTERFACES_SIZE];
+    unsigned short networkInterfacesCurrentSize = 0;
     short currentTryingInterfaceIndex = -1;
     bool autoConnect, autoReconnect;
     uint32_t autoReconnectCheckPeriod;
     uint64_t lastCheckedConnectionMS;
 
 public:
-    void addNetworkInterface(const NetworkInterface &networkInterface);
+    bool addNetworkInterface(NetworkInterface *networkInterface);
 
     bool connectToNetwork(NetworkInterface *targetNetwork);
 
@@ -40,15 +37,22 @@ public:
     void setAutoReconnect(bool autoReconnectValue, uint32_t connectionCheckPeriodValue = 3000);
 
     NetworkInterface *getCurrentNetworkInterface();
+
+    void sortInterfaces();
 };
 
-void NetworkInterfacesController::addNetworkInterface(const NetworkInterface &networkInterface) {
-    networkInterfaces.push_back(networkInterface);
+bool NetworkInterfacesController::addNetworkInterface(NetworkInterface *networkInterface) {
+    if (networkInterfacesCurrentSize < MAX_INTERFACES_SIZE) {
+        networkInterfaces[networkInterfacesCurrentSize] = networkInterface;
+        networkInterfacesCurrentSize++;
+        return true;
+    }
+    return false;
 }
 
 bool NetworkInterfacesController::connectToNetwork(uint8_t id) {
     short index = findNetworkInterfaceIndexById(id);
-    if (index != -1) return connectToNetwork(&networkInterfaces[findNetworkInterfaceIndexById(id)]);
+    if (index != -1) return connectToNetwork(networkInterfaces[findNetworkInterfaceIndexById(id)]);
     return false;
 }
 
@@ -67,16 +71,16 @@ bool NetworkInterfacesController::connectToNetwork(NetworkInterface *targetNetwo
 
     currentTryingInterfaceIndex = index;
     autoConnect = false;
-    if (!networkInterfaces[currentTryingInterfaceIndex].connect()) return false;
+    if (!networkInterfaces[currentTryingInterfaceIndex]->connect()) return false;
     return true;
 }
 
 void NetworkInterfacesController::loop() {
-    if (networkInterfaces.empty() || currentTryingInterfaceIndex < 0 ||
-        currentTryingInterfaceIndex >= networkInterfaces.size())
+    if (networkInterfacesCurrentSize == 0 || currentTryingInterfaceIndex < 0 ||
+        currentTryingInterfaceIndex >= networkInterfacesCurrentSize)
         return;
 
-    NetworkInterface *networkInterface = &networkInterfaces[currentTryingInterfaceIndex];
+    NetworkInterface *networkInterface = networkInterfaces[currentTryingInterfaceIndex];
     networkInterface->loop();
 
     if (networkInterface->isConnecting()) return;
@@ -93,12 +97,12 @@ void NetworkInterfacesController::loop() {
 
     printDBGln("Could not Connect to " + networkInterface->getName());
 
-    if (autoConnect && (currentTryingInterfaceIndex < networkInterfaces.size() - 1)) {
+    if (autoConnect && (currentTryingInterfaceIndex < networkInterfacesCurrentSize - 1)) {
         currentTryingInterfaceIndex++;
 
         printDBGln("[Auto Connect Mode]: change to next network interface: " +
-                   networkInterfaces[currentTryingInterfaceIndex].getName());
-        networkInterfaces[currentTryingInterfaceIndex].connect();
+                   networkInterfaces[currentTryingInterfaceIndex]->getName());
+        networkInterfaces[currentTryingInterfaceIndex]->connect();
         return;
     }
 
@@ -106,14 +110,14 @@ void NetworkInterfacesController::loop() {
         if (autoConnect) {
             currentTryingInterfaceIndex = 0;
             printDBGln("[Auto Connect Mode + AutoReconnect]: Start again from first priority. connecting to: " +
-                       networkInterfaces[currentTryingInterfaceIndex].getName());
-            networkInterfaces[currentTryingInterfaceIndex].connect();
+                       networkInterfaces[currentTryingInterfaceIndex]->getName());
+            networkInterfaces[currentTryingInterfaceIndex]->connect();
             return;
         }
 
         printDBGln("[AutoReconnect]: Retry Connecting to: " +
-                   networkInterfaces[currentTryingInterfaceIndex].getName());
-        networkInterfaces[currentTryingInterfaceIndex].connect();
+                   networkInterfaces[currentTryingInterfaceIndex]->getName());
+        networkInterfaces[currentTryingInterfaceIndex]->connect();
     }
 
 
@@ -121,21 +125,20 @@ void NetworkInterfacesController::loop() {
 
 void NetworkInterfacesController::autoConnectToNetwork() {
 
-    if (networkInterfaces.empty()) {
+    if (networkInterfacesCurrentSize == 0) {
         printDBGln("Network Interfaces are empty.");
         return;
     }
-    sort(networkInterfaces.begin(), networkInterfaces.end(), compareInterval);
+
+    sortInterfaces();
     autoConnect = true;
     currentTryingInterfaceIndex = 0;
-    networkInterfaces[currentTryingInterfaceIndex].connect();
+    networkInterfaces[currentTryingInterfaceIndex]->connect();
 }
 
 short NetworkInterfacesController::findNetworkInterfaceIndexById(uint8_t id) {
-    std::vector<NetworkInterface>::iterator it;
-    short i = 0;
-    for (it = networkInterfaces.begin(); it != networkInterfaces.end(); it++, i++) {
-        if (it->getId() == id)
+    for (int i = 0; i < networkInterfacesCurrentSize; i++) {
+        if (networkInterfaces[i]->getId() == id)
             return i;
     }
     return -1;
@@ -153,11 +156,21 @@ void NetworkInterfacesController::setAutoReconnect(bool autoReconnectValue, uint
 }
 
 NetworkInterface *NetworkInterfacesController::getCurrentNetworkInterface() {
-    if (!networkInterfaces.empty() && currentTryingInterfaceIndex >= 0 &&
-        currentTryingInterfaceIndex < networkInterfaces.size())
-        return &networkInterfaces[currentTryingInterfaceIndex];
+    if (!networkInterfacesCurrentSize == 0 && currentTryingInterfaceIndex >= 0 &&
+        currentTryingInterfaceIndex < networkInterfacesCurrentSize)
+        return networkInterfaces[currentTryingInterfaceIndex];
 
     return nullptr;
+}
+
+void NetworkInterfacesController::sortInterfaces() {
+    for (size_t i = 0; i < networkInterfacesCurrentSize; ++i) {
+        for (size_t j = i + 1; j < networkInterfacesCurrentSize; ++j) {
+            if (networkInterfaces[i]->getPriority() > networkInterfaces[j]->getPriority()) {
+                std::swap(networkInterfaces[i], networkInterfaces[j]);
+            }
+        }
+    }
 }
 
 #endif

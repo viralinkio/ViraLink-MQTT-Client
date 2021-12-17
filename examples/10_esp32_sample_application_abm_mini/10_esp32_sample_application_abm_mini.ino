@@ -1,13 +1,13 @@
 #include "Arduino.h"
 
-#define FIRMWARE_TITLE "pcb_v1"
+#define FIRMWARE_TITLE "abm_mini_v5.1"
 #define FIRMWARE_VERSION "1"
 
 #define AP_WIFI_SSID "ABM_MINI_CONFIG" //wifi ssid for ap mode in config web server
 #define AP_WIFI_PASS "1234567890" //wifi pass for ap mode in config web server
 #define AP_WIFI_ADDRESS IPAddress(192, 168, 4, 1), IPAddress(192, 168, 4, 1), IPAddress(255, 255, 255, 0)
 
-//#define TINY_GSM_RX_BUFFER 512
+#define TINY_GSM_RX_BUFFER 512
 #define VIRALINK_DEBUG // enable debug on SerialMon
 #define SerialMon Serial // if you need DEBUG SerialMon should be defined
 #define TINY_GSM_MODEM_SIM800     //GSM MODEL Depends on Each Device
@@ -98,11 +98,11 @@ void resetESP() {
     ESP.restart();
 }
 
-unsigned long kas;
 void mqttLoop(void *parameter) {
     while (true) {
-
-        mqttController.loop();
+        if (networkController.getCurrentNetworkInterface() != nullptr &&
+            networkController.getCurrentNetworkInterface()->getId() != modemInterface.getId())
+            mqttController.loop();
         delayMicroseconds(1);
     }
 }
@@ -133,12 +133,12 @@ bool on_message(const String &topic, DynamicJsonDocument json) {
 void connectToNetwork() {
     if (preferences.getBool("wifi")) {
         Serial.println("Added WiFi Interface");
-        networkController.addNetworkInterface(wifiInterface);
+        networkController.addNetworkInterface(&wifiInterface);
     }
 
     if (preferences.getBool("gsm")) {
         Serial.println("Added GSM Interface");
-        networkController.addNetworkInterface(modemInterface);
+        networkController.addNetworkInterface(&modemInterface);
     }
 
     networkController.setAutoReconnect(true, 10000);
@@ -247,24 +247,8 @@ void initInterfaces() {
     });
 }
 
-void persistDefaultValues() {
-    preferences.clear();
-    preferences.putString("configured", "true");
-//    preferences.putString("ssid", "Vira Afzar Co Ltd.");
-//    preferences.putString("pass", "!ceC@d3#TE@M");
-    preferences.putString("ssid", "HG@HOME_NEW");
-    preferences.putString("pass", "HG@HOME@#");
-    preferences.putString("apn", "mtnirancell");
-    preferences.putString("pin", "");
-    preferences.putString("token", "pEKB7uMRCRiaYswfwH9p");
-    preferences.putString("phone", "+16043741478");
-//    preferences.putBool("wifi", true);
-    preferences.putBool("gsm", true);
-}
-
 void setup() {
 
-    delay(5000);
     SerialMon.begin(115200);
     Serial.println();
 
@@ -272,7 +256,6 @@ void setup() {
 
     resetButton.init();
     preferences.begin("abm_mini", false);
-//    persistDefaultValues();
 
     // detect 3s long pressed on button to activate factory reset
     resetButton.onLongClick([]() {
@@ -318,7 +301,7 @@ void setup() {
         return;
     }
 
-    SerialAT.begin(9600);
+    SerialAT.begin(115200);
 
     mqttController.init();
     mqttController.sendSystemAttributes(true);
@@ -341,6 +324,11 @@ void setup() {
 }
 
 void loop() {
+    if (networkController.getCurrentNetworkInterface() != nullptr &&
+        networkController.getCurrentNetworkInterface()->getId() == modemInterface.getId() &&
+        modemInterface.lastConnectionStatus())
+        mqttController.loop();
+
     if (onWebserver) {
         server.handleClient();
         return;

@@ -61,6 +61,8 @@ public:
 
     void sendSystemAttributes(bool isSendAttributes);
 
+    uint16_t getQueueSize();
+
 private:
     Queue<MQTTMessage> *queue;
 #ifdef INC_FREERTOS_H
@@ -373,6 +375,11 @@ void MQTTController::resetBufferSize() {
 
 void MQTTController::sendSystemAttributes(bool value) {
     MQTTController::isSendAttributes = value;
+}
+
+uint16_t MQTTController::getQueueSize() {
+    if(queue!= nullptr) return queue->getCounts();
+    return 0;
 }
 
 #endif
