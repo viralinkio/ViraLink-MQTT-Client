@@ -1,20 +1,20 @@
 {
-  "name": "Viralink_Arduino_SDK",
-  "version": "0.0.50",
-  "description": "A SDK and Examples for Viralink IoT Paltform",
+  "name": "ViraLink-MQTT-Client",
+  "version": "0.0.57",
+  "description": "A SDK and Examples for Viralink IoT Paltform MQTT Client",
   "keywords": "Viralink, Arduino",
   "authors": [
     {
       "name": "Viralink.io",
-      "url": "https://viralink.io",
+      "url": "https://www.viralink.io",
       "maintainer": true
     }
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/viralinkio/Arduino-SDK.git"
+    "url": "https://github.com/viralinkio/ViraLink-Arduino-SDK"
   },
-  "homepage": "https://github.com/viralinkio/Arduino-SDK.git",
+  "homepage": "https://www.viralink.io",
   "export": {
     "include": [
       "src/*",

@@ -59,7 +59,7 @@ pio run -t upload -e myenv
 
 ### [Arduino IDE](https://www.arduino.cc/en/software)
 1. First Install All Requirement Libraries
-2. Download The Repository and Extract it to your sketchbook location like " C:\Users\myUser\Documents\Arduino\libraries". You can find exact location on Arduino IDE Settings. File > Preferences > Sketchbook location
-3. copy the content of .cpp file in example to your .ino file
+2. Install the Viralink-Arduino-SDK from LibraryManager
+3. Open One example
 4. Select Target Board and Port
 5. Build and Upload from Arduino IDE
