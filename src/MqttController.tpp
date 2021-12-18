@@ -43,11 +43,19 @@ public:
 
     bool requestAttributesJson(const String &keysJson, const MqttCallbackJsonPayload &callback = nullptr);
 
-    bool sendAttributes(const String &json);
+    bool sendAttributes(const String &json, const String &deviceName = "");
 
-    bool sendTelemetry(const String &json);
+    bool sendTelemetry(const String &json, const String &deviceName = "");
 
-    bool sendClaimRequest(const String &key, uint32_t duration_ms);
+    bool sendClaimRequest(const String &key, uint32_t duration_ms, const String &deviceName = "");
+
+    bool sendGatewayConnectEvent(const String &deviceName);
+
+    bool sendGatewayDisConnectEvent(const String &deviceName);
+
+    bool subscribeToGatewayEvent();
+
+    bool unsubscribeToGatewayEvent();
 
     void registerCallbackRawPayload(const MqttCallbackRawPayload &callback);
 
@@ -59,7 +67,7 @@ public:
 
     void resetBufferSize();
 
-    void sendSystemAttributes(bool isSendAttributes);
+    void sendSystemAttributes(bool value);
 
     uint16_t getQueueSize();
 
@@ -204,23 +212,23 @@ void MQTTController::loop() {
 #ifdef INC_FREERTOS_H
     if (xSemaphoreTake(semaQueue, portMAX_DELAY)) {
 #endif
-        if (queue != nullptr && !queue->isEmpty() && isConnected()) {
-            MQTTMessage message = queue->peek();
-            if (mqttClient.publish(message.getTopic().c_str(), message.getPayload().c_str())) {
+    if (queue != nullptr && !queue->isEmpty() && isConnected()) {
+        MQTTMessage message = queue->peek();
+        if (mqttClient.publish(message.getTopic().c_str(), message.getPayload().c_str())) {
+            queue->removeLastPeek();
+        } else {
+            message.incrementRetry();
+            if (message.getRetry() >= 5) {
+                printDBGln("Could Not Publish");
+                printDBGln(message.getTopic());
+                printDBGln(message.getPayload());
                 queue->removeLastPeek();
-            } else {
-                message.incrementRetry();
-                if (message.getRetry() >= 5) {
-                    printDBGln("Could Not Publish");
-                    printDBGln(message.getTopic());
-                    printDBGln(message.getPayload());
-                    queue->removeLastPeek();
-                }
             }
         }
-#ifdef INC_FREERTOS_H
-        xSemaphoreGive(semaQueue);
     }
+#ifdef INC_FREERTOS_H
+    xSemaphoreGive(semaQueue);
+}
 #endif
 
     if (isSendAttributes && ((millis - lastSendAttributes) > ((uint64_t) (updateInterval * 1000)))) {
@@ -315,12 +323,12 @@ bool MQTTController::addToPublishQueue(const String &topic, const String &payloa
 #ifdef INC_FREERTOS_H
     if (xSemaphoreTake(semaQueue, portMAX_DELAY)) {
 #endif
-        MQTTMessage message(topic, payload);
-        if (queue != nullptr && queue->push(message)) result = true;
-        else result = false;
+    MQTTMessage message(topic, payload);
+    if (queue != nullptr && queue->push(message)) result = true;
+    else result = false;
 #ifdef INC_FREERTOS_H
-        xSemaphoreGive(semaQueue);
-    }
+    xSemaphoreGive(semaQueue);
+}
 #endif
     return result;
 }
@@ -345,19 +353,39 @@ MQTTController::requestAttributesJson(const String &keysJson, const MQTTControll
                              keysJson);
 }
 
-bool MQTTController::sendAttributes(const String &json) {
+bool MQTTController::sendAttributes(const String &json, const String &deviceName) {
+    if (!deviceName.isEmpty()) {
+        DynamicJsonDocument data(1024);
+        data[deviceName] = json;
+        data.shrinkToFit();
+        return addToPublishQueue(V1_Attributes_GATEWAY_TOPIC, json);
+    }
     return addToPublishQueue(V1_Attributes_TOPIC, json);
 }
 
-bool MQTTController::sendTelemetry(const String &json) {
+bool MQTTController::sendTelemetry(const String &json, const String &deviceName) {
+    if (!deviceName.isEmpty()) {
+        DynamicJsonDocument data(1024);
+        data[deviceName] = json;
+        data.shrinkToFit();
+        return addToPublishQueue(V1_TELEMETRY_GATEWAY_TOPIC, json);
+    }
     return addToPublishQueue(V1_TELEMETRY_TOPIC, json);
 }
 
-bool MQTTController::sendClaimRequest(const String &key, uint32_t duration_ms) {
+bool MQTTController::sendClaimRequest(const String &key, uint32_t duration_ms, const String &deviceName) {
     DynamicJsonDocument data(200);
     data["secretKey"] = key;
     data["durationMs"] = duration_ms;
     data.shrinkToFit();
+
+    if (!deviceName.isEmpty()) {
+        DynamicJsonDocument deviceData(1024);
+        deviceData[deviceName] = data.as<String>();
+        deviceData.shrinkToFit();
+        return addToPublishQueue("v1/gateway/claim", deviceData.as<String>());
+    }
+
     return addToPublishQueue("v1/devices/me/claim", data.as<String>());
 }
 
@@ -378,8 +406,34 @@ void MQTTController::sendSystemAttributes(bool value) {
 }
 
 uint16_t MQTTController::getQueueSize() {
-    if(queue!= nullptr) return queue->getCounts();
+    if (queue != nullptr) return queue->getCounts();
     return 0;
+}
+
+bool MQTTController::sendGatewayConnectEvent(const String &deviceName) {
+    DynamicJsonDocument data(200);
+    data["device"] = deviceName;
+    data.shrinkToFit();
+    return addToPublishQueue("v1/gateway/connect", deviceName);
+}
+
+bool MQTTController::sendGatewayDisConnectEvent(const String &deviceName) {
+    DynamicJsonDocument data(200);
+    data["device"] = deviceName;
+    data.shrinkToFit();
+    return addToPublishQueue("v1/gateway/disconnect", deviceName);
+}
+
+bool MQTTController::subscribeToGatewayEvent() {
+    if (mqttClient.subscribe(V1_Attributes_GATEWAY_TOPIC))
+        return mqttClient.subscribe("v1/gateway/rpc");
+    return false;
+}
+
+bool MQTTController::unsubscribeToGatewayEvent() {
+    if (mqttClient.unsubscribe(V1_Attributes_GATEWAY_TOPIC))
+        return mqttClient.unsubscribe("v1/gateway/rpc");
+    return false;
 }
 
 #endif

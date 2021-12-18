@@ -2,7 +2,10 @@
 #define VIRALINK_MQTT_Message_TPP
 
 #define V1_Attributes_TOPIC "v1/devices/me/attributes"
+#define V1_Attributes_GATEWAY_TOPIC "v1/gateway/attributes"
+
 #define V1_TELEMETRY_TOPIC "v1/devices/me/telemetry"
+#define V1_TELEMETRY_GATEWAY_TOPIC "v1/gateway/telemetry"
 
 class MQTTMessage {
 public:
