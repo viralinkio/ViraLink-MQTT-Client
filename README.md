@@ -1,6 +1,6 @@
 # Arduino-SDK for viralink.io
 
-![Actions Status: main](https://github.com/viralinkio/Arduino-SDK/workflows/PlatformIO%20CI/badge.svg)
+![Actions Status: main](https://github.com/viralinkio/ViraLink-MQTT-Client/workflows/PlatformIO%20CI/badge.svg)
 
 This library helps you to connect viralink.io server with The most used examples and needed.
 
