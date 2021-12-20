@@ -1,4 +1,4 @@
-# Arduino-SDK for viralink.io
+# ViraLink MQTT Client for Viralink IoT Cloud Platform
 
 [![Actions Status: main](https://github.com/viralinkio/ViraLink-MQTT-Client/workflows/PlatformIO%20CI/badge.svg)](https://platformio.org/lib/show/13275/ViraLink-MQTT-Client)
 [![arduino-library-badge](https://www.ardu-badge.com/badge/ViraLink-MQTT-Client.svg?)](https://www.ardu-badge.com/ViraLink-MQTT-Client)
