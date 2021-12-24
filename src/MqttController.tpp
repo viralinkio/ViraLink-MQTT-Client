@@ -43,9 +43,9 @@ public:
 
     bool requestAttributesJson(const String &keysJson, const MqttCallbackJsonPayload &callback = nullptr);
 
-    bool sendAttributes(const String &json, const String &deviceName = "");
+    bool sendAttributes(DynamicJsonDocument json, const String &deviceName = "");
 
-    bool sendTelemetry(const String &json, const String &deviceName = "");
+    bool sendTelemetry(DynamicJsonDocument json, const String &deviceName = "");
 
     bool sendClaimRequest(const String &key, uint32_t duration_ms, const String &deviceName = "");
 
@@ -353,24 +353,26 @@ MQTTController::requestAttributesJson(const String &keysJson, const MQTTControll
                              keysJson);
 }
 
-bool MQTTController::sendAttributes(const String &json, const String &deviceName) {
+bool MQTTController::sendAttributes(DynamicJsonDocument json, const String &deviceName) {
     if (!deviceName.isEmpty()) {
-        DynamicJsonDocument data(1024);
-        data[deviceName] = json;
-        data.shrinkToFit();
-        return addToPublishQueue(V1_Attributes_GATEWAY_TOPIC, json);
+        DynamicJsonDocument newData(json.capacity() + 200);
+        newData[deviceName] = json;
+        newData.shrinkToFit();
+        return addToPublishQueue(V1_Attributes_GATEWAY_TOPIC, newData.as<String>());
     }
-    return addToPublishQueue(V1_Attributes_TOPIC, json);
+    json.shrinkToFit();
+    return addToPublishQueue(V1_Attributes_TOPIC, json.as<String>());
 }
 
-bool MQTTController::sendTelemetry(const String &json, const String &deviceName) {
+bool MQTTController::sendTelemetry(DynamicJsonDocument json, const String &deviceName) {
     if (!deviceName.isEmpty()) {
-        DynamicJsonDocument data(1024);
-        data[deviceName] = json;
-        data.shrinkToFit();
-        return addToPublishQueue(V1_TELEMETRY_GATEWAY_TOPIC, json);
+        DynamicJsonDocument newData(json.capacity() + 200);
+        newData[deviceName].add(json);
+        newData.shrinkToFit();
+        return addToPublishQueue(V1_TELEMETRY_GATEWAY_TOPIC, newData.as<String>());
     }
-    return addToPublishQueue(V1_TELEMETRY_TOPIC, json);
+    json.shrinkToFit();
+    return addToPublishQueue(V1_TELEMETRY_TOPIC, json.as<String>());
 }
 
 bool MQTTController::sendClaimRequest(const String &key, uint32_t duration_ms, const String &deviceName) {

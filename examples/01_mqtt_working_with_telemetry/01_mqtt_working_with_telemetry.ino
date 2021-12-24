@@ -42,14 +42,14 @@ void sendTimeSeriesData() {
     Serial.println("Sending TimeSeries Data");
     DynamicJsonDocument data(100);
     data["temperature"] = random(0, 100);
-    mqttController.sendTelemetry(data.as<String>());
+    mqttController.sendTelemetry(data);
 
 }
 
 void sendAttributesData() {
     DynamicJsonDocument data(100);
     data["OS_Version"] = random(0, 5);
-    mqttController.sendAttributes(data.as<String>());
+    mqttController.sendAttributes(data);
 }
 
 void requestAttributesValues() {

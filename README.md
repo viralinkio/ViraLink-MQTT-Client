@@ -1,6 +1,6 @@
 # Arduino-SDK for viralink.io
 
-![Actions Status: main](https://github.com/viralinkio/Arduino-SDK/workflows/PlatformIO%20CI/badge.svg)
+![Actions Status: main](https://github.com/viralinkio/ViraLink-MQTT-Client/workflows/PlatformIO%20CI/badge.svg)
 
 This library helps you to connect viralink.io server with The most used examples and needed.
 
@@ -29,7 +29,7 @@ This library and its examples are dependent on the following libraries
 You can install via Platformio and Arduino IDE. 
 
 ### [Platformio](https://platformio.org/)
-If you are using platformio all dependencies are installed automatically. Just add [viralink-arduino-sdk](https://platformio.org/lib/show/12005/Viralink_Arduino_SDK/installation) to your [platformio.ini](https://docs.platformio.org/en/latest/projectconf/index.html)
+If you are using platformio all dependencies are installed automatically. Just add [viralink-arduino-sdk](https://platformio.org/lib/show/13275/ViraLink-MQTT-Client/installation) to your [platformio.ini](https://docs.platformio.org/en/latest/projectconf/index.html)
 The example for paltformio.ini for esp32 board. 
 NOTE: This is example. Update the version of sdk library
 ```
@@ -38,7 +38,7 @@ platform = espressif32
 board = esp32doit-devkit-v1
 framework = arduino
 lib_deps =
-     viralink/Viralink_Arduino_SDK @ ^0.0.47
+     viralink/Viralink_Arduino_SDK @ ^0.0.62
 ```
 
 ### [Arduino IDE](https://www.arduino.cc/en/software)

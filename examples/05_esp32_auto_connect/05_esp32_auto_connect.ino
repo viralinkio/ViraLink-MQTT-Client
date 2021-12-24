@@ -106,7 +106,7 @@ void setup() {
         return modem.isGprsConnected();
     });
     modemInterface.OnConnectedEvent([]() {
-        Serial.println(String("Connected to GSM with IP: ") + modem.localIP());
+        Serial.println(String("Connected to GSM with IP: ") + modem.localIP().toString());
     });
 
     networkController.addNetworkInterface(&wifiInterface);

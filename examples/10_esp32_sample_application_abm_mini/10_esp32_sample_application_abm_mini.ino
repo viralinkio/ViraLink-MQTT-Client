@@ -159,7 +159,7 @@ void connectToPlatform(Client &client) {
 
                 DynamicJsonDocument data(100);
                 data["Phone"] = preferences.getString("phone");
-                mqttController.sendAttributes(data.as<String>());
+                mqttController.sendAttributes(data);
             });
 }
 
@@ -184,7 +184,7 @@ void initInterfaces() {
         data["Connection Type"] = "WIFI";
         data["IP"] = WiFi.localIP().toString();
         data.shrinkToFit();
-        mqttController.sendAttributes(data.as<String>());
+        mqttController.sendAttributes(data);
     });
 
     // no need to timeout because the function only Trying to connect only ones;
@@ -243,7 +243,7 @@ void initInterfaces() {
         data["Signal Quality"] = modem.getSignalQuality();
         data["ModemInfo"] = modem.getModemInfo();
         data.shrinkToFit();
-        mqttController.sendAttributes(data.as<String>());
+        mqttController.sendAttributes(data);
     });
 }
 
