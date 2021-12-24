@@ -1,6 +1,6 @@
 {
   "name": "ViraLink-MQTT-Client",
-  "version": "0.0.62",
+  "version": "0.0.63",
   "description": "A SDK and Examples for Viralink IoT Paltform MQTT Client",
   "keywords": "Viralink, Arduino",
   "authors": [
