@@ -2,6 +2,7 @@
 #define VIRALINK_QUEUE_TPP
 
 #include <Arduino.h>
+#include <vector>
 
 using namespace std;
 
