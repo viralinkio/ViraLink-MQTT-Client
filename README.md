@@ -31,13 +31,14 @@ This library and its examples are dependent on the following libraries
 You can install this library via Platformio and/or Arduino IDE. 
 
 ### [Platformio](https://platformio.org/)
-If you are using platformio all dependencies are installed automatically.
+All dependencies will be installed automatically.
 
 Just add [ViraLink-MQTT-Client](https://registry.platformio.org/libraries/viralinkio/ViraLink-MQTT-Client/installation) to your [platformio.ini](https://docs.platformio.org/en/latest/projectconf/index.html)
 
-The example for paltformio.ini for esp32 board. 
+This is a example of paltformio.ini for ESP32 DevKit. 
 
-NOTE: This is just an example. Update the version of the library
+NOTE: This is just an example. 
+Update the version of the library to the latest !
 ```
 [env:myenv]
 platform = espressif32
