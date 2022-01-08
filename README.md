@@ -1,7 +1,7 @@
 # ViraLink MQTT Client for Viralink IoT Cloud Platform
 
 [![Actions Status: main](https://github.com/viralinkio/ViraLink-MQTT-Client/workflows/PlatformIO%20CI/badge.svg)](https://registry.platformio.org/libraries/viralinkio/ViraLink-MQTT-Client)
-<a href="https://registry.platformio.org/libraries/viralinkio/ViraLink-MQTT-Client"><img src="https://badges.registry.platformio.org/packages/viralinkio/library/ViraLink-MQTT-Client.svg" alt="PlatformIO Registry" /></a>
+[![PlatformIO Registry](https://badges.registry.platformio.org/packages/viralinkio/library/ViraLink-MQTT-Client.svg)](https://registry.platformio.org/libraries/viralinkio/ViraLink-MQTT-Client)
 [![arduino-library-badge](https://www.ardu-badge.com/badge/ViraLink-MQTT-Client.svg?)](https://www.ardu-badge.com/ViraLink-MQTT-Client)
 
 This library helps you to connect to viralink.io server with The most needed examples.
