@@ -45,7 +45,11 @@ public:
 
     bool sendAttributes(DynamicJsonDocument json, const String &deviceName = "");
 
+    bool sendAttributes(const String &json);
+
     bool sendTelemetry(DynamicJsonDocument json, const String &deviceName = "");
+
+    bool sendTelemetry(const String &json);
 
     bool sendClaimRequest(const String &key, uint32_t duration_ms, const String &deviceName = "");
 
@@ -373,6 +377,14 @@ bool MQTTController::sendTelemetry(DynamicJsonDocument json, const String &devic
     }
     json.shrinkToFit();
     return addToPublishQueue(V1_TELEMETRY_TOPIC, json.as<String>());
+}
+
+bool MQTTController::sendAttributes(const String &json) {
+    return addToPublishQueue(V1_Attributes_TOPIC, json);
+}
+
+bool MQTTController::sendTelemetry(const String &json) {
+    return addToPublishQueue(V1_TELEMETRY_TOPIC, json);
 }
 
 bool MQTTController::sendClaimRequest(const String &key, uint32_t duration_ms, const String &deviceName) {
