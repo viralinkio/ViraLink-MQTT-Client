@@ -151,12 +151,12 @@ short NetworkInterfacesController::findNetworkInterfaceIndexByReference(NetworkI
 }
 
 void NetworkInterfacesController::setAutoReconnect(bool autoReconnectValue, uint32_t connectionCheckPeriodValue) {
-    NetworkInterfacesController::autoReconnect = autoReconnectValue;
+    autoReconnect = autoReconnectValue;
     autoReconnectCheckPeriod = connectionCheckPeriodValue;
 }
 
 NetworkInterface *NetworkInterfacesController::getCurrentNetworkInterface() {
-    if (!networkInterfacesCurrentSize == 0 && currentTryingInterfaceIndex >= 0 &&
+    if (networkInterfacesCurrentSize != 0 && currentTryingInterfaceIndex >= 0 &&
         currentTryingInterfaceIndex < networkInterfacesCurrentSize)
         return networkInterfaces[currentTryingInterfaceIndex];
 

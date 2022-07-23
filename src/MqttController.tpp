@@ -21,6 +21,8 @@ public:
 
     typedef std::function<bool(const String &topic, uint8_t *payload, unsigned int length)> MqttCallbackRawPayload;
 
+    typedef std::function<void(MQTTMessage mqttMessage)> SentMQTTMessageCallback;
+
     typedef void (*ConnectionEvent)();
 
     MQTTController(int queueSize = 512);
@@ -65,6 +67,8 @@ public:
 
     void registerCallbackJsonPayload(const MqttCallbackJsonPayload &callback);
 
+    void onSentMQTTMessageCallback(const SentMQTTMessageCallback &callback);
+
     void setTimeout(int timeout_ms);
 
     void resetTimeout();
@@ -90,9 +94,10 @@ private:
     ConnectionEvent connectedEvent;
     DefaultMqttCallbackJsonPayload defaultCallback;
     DefaultMqttCallbackRawPayload defaultCallbackRaw;
-    std::vector<MqttCallbackRawPayload> registeredCallbacksRaw;
-    std::vector<MqttCallbackJsonPayload> registeredCallbacksJson;
+    std::vector <MqttCallbackRawPayload> registeredCallbacksRaw;
+    std::vector <MqttCallbackJsonPayload> registeredCallbacksJson;
     std::map<unsigned int, MqttCallbackJsonPayload> requestsCallbacksJson;
+    SentMQTTMessageCallback sentMqttMessageCallback;
     uint16_t defaultTimeout, defaultBufferSize, jsonSerializeBuffer;
     uint32_t timeout, attrRequestId;
 
@@ -219,6 +224,7 @@ void MQTTController::loop() {
     if (queue != nullptr && !queue->isEmpty() && isConnected()) {
         MQTTMessage message = queue->peek();
         if (mqttClient.publish(message.getTopic().c_str(), message.getPayload().c_str())) {
+            if (sentMqttMessageCallback != nullptr) sentMqttMessageCallback(message);
             queue->removeLastPeek();
         } else {
             message.incrementRetry();
@@ -235,7 +241,7 @@ void MQTTController::loop() {
 }
 #endif
 
-    if (isSendAttributes && ((millis - lastSendAttributes) > ((uint64_t) (updateInterval * 1000)))) {
+    if (isSendAttributes && ((millis - lastSendAttributes) > ((uint64_t)(updateInterval * 1000)))) {
         lastSendAttributes = millis;
         sendAttributesFunc();
     }
@@ -448,6 +454,10 @@ bool MQTTController::unsubscribeToGatewayEvent() {
     if (mqttClient.unsubscribe(V1_Attributes_GATEWAY_TOPIC))
         return mqttClient.unsubscribe("v1/gateway/rpc");
     return false;
+}
+
+void MQTTController::onSentMQTTMessageCallback(const MQTTController::SentMQTTMessageCallback &callback) {
+    sentMqttMessageCallback = callback;
 }
 
 #endif
