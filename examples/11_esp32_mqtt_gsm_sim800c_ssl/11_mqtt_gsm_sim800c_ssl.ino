@@ -9,7 +9,7 @@
 
 #define VIRALINK_TOKEN "xxxxxx"
 #define VIRALINK_MQTT_URL "console.viralink.io"
-#define VIRALINK_MQTT_PORT 1883
+#define VIRALINK_MQTT_PORT 8883
 
 #define SIM_APN "apn"
 
