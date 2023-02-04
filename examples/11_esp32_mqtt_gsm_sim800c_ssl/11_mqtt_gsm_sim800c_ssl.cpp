@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 #define TINY_GSM_MODEM_SIM800     //GSM MODEL Depends on Each Device
-#define SerialAT Serial          //if you enable GSM feature the SerialAT should be defined
+#define SerialAT Serial2          //if you enable GSM feature the SerialAT should be defined
 #define TINY_GSM_DEBUG SerialMon
 
 #define VIRALINK_DEBUG // enable debug on SerialMon
@@ -13,11 +13,15 @@
 
 #define SIM_APN "apn"
 
+#include <SSLClient.h>
+#include "certificates.h" // This file must be auto generated using provided script
+
 #include <TinyGsmClient.h>
 #include "viralink.h"
 
 TinyGsm modem(SerialAT);
 TinyGsmClient tinyGsmClient(modem);
+SSLClient sslClient(client, TAs, (size_t) TAs_NUM, A5);
 MQTTController mqttController;
 
 bool connectToNetwork() {
@@ -71,7 +75,7 @@ void setup() {
     }
 
     mqttController.init();
-    mqttController.connect(tinyGsmClient, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
+    mqttController.connect(sslClient, "esp", VIRALINK_TOKEN, "", VIRALINK_MQTT_URL, VIRALINK_MQTT_PORT, on_message,
                            nullptr, []() {
                 Serial.println("Connected To Platform");
             });
