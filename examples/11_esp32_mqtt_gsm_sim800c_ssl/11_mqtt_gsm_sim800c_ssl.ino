@@ -21,7 +21,7 @@
 
 TinyGsm modem(SerialAT);
 TinyGsmClient tinyGsmClient(modem);
-SSLClient sslClient(client, TAs, (size_t) TAs_NUM, A5);
+SSLClient sslClient(tinyGsmClient, TAs, (size_t) TAs_NUM, A5);
 MQTTController mqttController;
 
 bool connectToNetwork() {
