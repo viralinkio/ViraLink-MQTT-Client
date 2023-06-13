@@ -54,7 +54,7 @@ private:
 
 bool MQTTOTA::handleMessage(String topic, DynamicJsonDocument json) {
     if (json.containsKey("shared"))
-        json = json.getMember("shared");
+        json = json["shared"];
 
     if (!json.containsKey(FW_CHECKSUM_ATTR) || !json.containsKey(FW_CHECKSUM_ALG_ATTR) ||
         !json.containsKey(FW_SIZE_ATTR) || !json.containsKey(FW_TITLE_ATTR) || !json.containsKey(FW_VERSION_ATTR))
