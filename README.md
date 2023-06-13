@@ -46,7 +46,7 @@ platform = espressif32
 board = esp32doit-devkit-v1
 framework = arduino
 lib_deps =
-     viralink/Viralink_Arduino_SDK @ ^0.0.68
+     viralink/Viralink_Arduino_SDK @ ^0.0.69
 ```
 
 ### [Arduino IDE](https://www.arduino.cc/en/software)
