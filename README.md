@@ -3,7 +3,7 @@
 [![Actions Status: main](https://github.com/viralinkio/ViraLink-MQTT-Client/workflows/PlatformIO%20CI/badge.svg)](https://registry.platformio.org/libraries/viralinkio/ViraLink-MQTT-Client)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/viralinkio/library/ViraLink-MQTT-Client.svg)](https://registry.platformio.org/libraries/viralinkio/ViraLink-MQTT-Client)
 [![arduino-library-badge](https://www.ardu-badge.com/badge/ViraLink-MQTT-Client.svg?)](https://www.ardu-badge.com/ViraLink-MQTT-Client)
-[![Chat on Telegram](https://img.shields.io/badge/Chat%20on-Telegram-blue.svg)](https://t.me/viralinkDiscussion)
+[![Chat on Telegram](https://img.shields.io/badge/Chat%20on-Telegram-blue.svg)](https://t.me/+PUASABLY8Qg5Zjhk)
 
 This library helps you to connect to viralink.io server with The most needed examples.
 
