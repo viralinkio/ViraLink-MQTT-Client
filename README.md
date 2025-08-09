@@ -46,7 +46,7 @@ platform = espressif32
 board = esp32doit-devkit-v1
 framework = arduino
 lib_deps =
-     viralinkio/ViraLink-MQTT-Client @ ^1.0.0
+     viralinkio/ViraLink-MQTT-Client @ ^1.0.1
 ```
 
 ### [Arduino IDE](https://www.arduino.cc/en/software)
