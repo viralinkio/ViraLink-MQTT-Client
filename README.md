@@ -8,7 +8,7 @@
 This library helps you to connect to viralink.io server with The most needed examples.
 
 ## Features
-1. Connect to [viralink.io](https://viralink.io) or any Thingsboard server via MQTT Protocol.
+1. Connect to [console.viralink.ir](https://console.viralink.ir) or any Thingsboard server via MQTT Protocol.
 2. Send Telemetry and Attributes to Server
 3. OTA Update via MQTT. (Only supports esp8266 and esp32)
 4. Implement the queue for queuing the mqtt messages when not connected to server to prevent data lost
@@ -46,7 +46,7 @@ platform = espressif32
 board = esp32doit-devkit-v1
 framework = arduino
 lib_deps =
-     viralink/Viralink_Arduino_SDK @ ^0.1.0
+     viralinkio/ViraLink-MQTT-Client @ ^1.0.0
 ```
 
 ### [Arduino IDE](https://www.arduino.cc/en/software)

@@ -1,9 +1,9 @@
 #include "Arduino.h"
 
-#define FIRMWARE_TITLE "abm_mini_v5.1"
+#define FIRMWARE_TITLE "viralink-test"
 #define FIRMWARE_VERSION "1"
 
-#define AP_WIFI_SSID "ABM_MINI_CONFIG" //wifi ssid for ap mode in config web server
+#define AP_WIFI_SSID "ViraLink IoT" //wifi ssid for ap mode in config web server
 #define AP_WIFI_PASS "1234567890" //wifi pass for ap mode in config web server
 #define AP_WIFI_ADDRESS IPAddress(192, 168, 4, 1), IPAddress(192, 168, 4, 1), IPAddress(255, 255, 255, 0)
 
@@ -255,7 +255,7 @@ void setup() {
     Serial.println("Hello from [" + String(FIRMWARE_TITLE) + "]:[" + String(FIRMWARE_VERSION) + "]");
 
     resetButton.init();
-    preferences.begin("abm_mini", false);
+    preferences.begin("viralink-data", false);
 
     // detect 3s long pressed on button to activate factory reset
     resetButton.onLongClick([]() {
