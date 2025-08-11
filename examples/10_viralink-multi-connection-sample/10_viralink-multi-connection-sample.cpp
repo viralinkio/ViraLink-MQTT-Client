@@ -107,7 +107,7 @@ void mqttLoop(void *parameter) {
     }
 }
 
-bool on_message(const String &topic, DynamicJsonDocument json) {
+bool on_message(const String &topic, JsonDocument json) {
 
     Serial.println("Topic1: ");
     Serial.println(topic);
@@ -157,7 +157,7 @@ void connectToPlatform(Client &client) {
 
                 ota.checkForUpdate();
 
-                DynamicJsonDocument data(100);
+                JsonDocument data;
                 data["Phone"] = preferences.getString("phone");
                 mqttController.sendAttributes(data);
             });
@@ -180,7 +180,7 @@ void initInterfaces() {
         Serial.println(String("Connected to WIFI with IP: ") + WiFi.localIP().toString());
         ota.startHandleOTAMessages();
         connectToPlatform(wifiClient);
-        DynamicJsonDocument data(200);
+        JsonDocument data;
         data["Connection Type"] = "WIFI";
         data["IP"] = WiFi.localIP().toString();
         data.shrinkToFit();
@@ -235,7 +235,7 @@ void initInterfaces() {
         ota.stopHandleOTAMessages();
         connectToPlatform(tinyGsmClient);
 
-        DynamicJsonDocument data(400);
+        JsonDocument data;
         data["Connection Type"] = "GSM";
         data["IP"] = modem.localIP().toString();
         data["Operator"] = modem.getOperator();

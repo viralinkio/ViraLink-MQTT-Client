@@ -13,11 +13,11 @@
 class MQTTController {
 public:
 
-    typedef bool (*DefaultMqttCallbackJsonPayload)(const String &topic, DynamicJsonDocument json);
+    typedef bool (*DefaultMqttCallbackJsonPayload)(const String &topic, JsonDocument json);
 
     typedef bool (*DefaultMqttCallbackRawPayload)(const String &topic, uint8_t *payload, unsigned int length);
 
-    typedef std::function<bool(String topic, DynamicJsonDocument json)> MqttCallbackJsonPayload;
+    typedef std::function<bool(String topic, JsonDocument json)> MqttCallbackJsonPayload;
 
     typedef std::function<bool(const String &topic, uint8_t *payload, unsigned int length)> MqttCallbackRawPayload;
 
@@ -45,11 +45,11 @@ public:
 
     bool requestAttributesJson(const String &keysJson, const MqttCallbackJsonPayload &callback = nullptr);
 
-    bool sendAttributes(DynamicJsonDocument json, const String &deviceName = "");
+    bool sendAttributes(JsonDocument json, const String &deviceName = "");
 
     bool sendAttributes(const String &json);
 
-    bool sendTelemetry(DynamicJsonDocument json, const String &deviceName = "");
+    bool sendTelemetry(JsonDocument json, const String &deviceName = "");
 
     bool sendTelemetry(const String &json);
 
@@ -140,7 +140,7 @@ void MQTTController::on_message(const char *tp, uint8_t *payload, unsigned int l
     printDBGln(json);
 
     // Decode JSON request
-    DynamicJsonDocument data(jsonSerializeBuffer);
+    JsonDocument data;
     auto error = deserializeJson(data, (char *) json);
     if (error) {
         printDBG("deserializeJson() failed with code ");
@@ -288,7 +288,7 @@ uint8_t temprature_sens_read();
 #endif
 
 String MQTTController::getChipInfo() {
-    DynamicJsonDocument data(400);
+    JsonDocument data;
     data[String("Cpu FreqMHZ")] = ESP.getCpuFreqMHz();
     data[String("Viralink SDK Version")] = SDK_VERSION;
 #ifdef ESP32
@@ -307,7 +307,7 @@ void MQTTController::sendAttributesFunc() {
     if (!isConnected())
         return;
 
-    DynamicJsonDocument data(400);
+    JsonDocument data;
     data[String("upTime")] = Uptime.getSeconds();
     data[String("ESP Free Heap")] = ESP.getFreeHeap();
 
@@ -363,9 +363,9 @@ MQTTController::requestAttributesJson(const String &keysJson, const MQTTControll
                              keysJson);
 }
 
-bool MQTTController::sendAttributes(DynamicJsonDocument json, const String &deviceName) {
+bool MQTTController::sendAttributes(JsonDocument json, const String &deviceName) {
     if (!deviceName.isEmpty()) {
-        DynamicJsonDocument newData(json.capacity() + 200);
+        JsonDocument newData;
         newData[deviceName] = json;
         newData.shrinkToFit();
         return addToPublishQueue(V1_Attributes_GATEWAY_TOPIC, newData.as<String>());
@@ -374,9 +374,9 @@ bool MQTTController::sendAttributes(DynamicJsonDocument json, const String &devi
     return addToPublishQueue(V1_Attributes_TOPIC, json.as<String>());
 }
 
-bool MQTTController::sendTelemetry(DynamicJsonDocument json, const String &deviceName) {
+bool MQTTController::sendTelemetry(JsonDocument json, const String &deviceName) {
     if (!deviceName.isEmpty()) {
-        DynamicJsonDocument newData(json.capacity() + 200);
+        JsonDocument newData;
         newData[deviceName].add(json);
         newData.shrinkToFit();
         return addToPublishQueue(V1_TELEMETRY_GATEWAY_TOPIC, newData.as<String>());
@@ -394,13 +394,13 @@ bool MQTTController::sendTelemetry(const String &json) {
 }
 
 bool MQTTController::sendClaimRequest(const String &key, uint32_t duration_ms, const String &deviceName) {
-    DynamicJsonDocument data(200);
+    JsonDocument data;
     data["secretKey"] = key;
     data["durationMs"] = duration_ms;
     data.shrinkToFit();
 
     if (!deviceName.isEmpty()) {
-        DynamicJsonDocument deviceData(1024);
+        JsonDocument deviceData;
         deviceData[deviceName] = data.as<String>();
         deviceData.shrinkToFit();
         return addToPublishQueue("v1/gateway/claim", deviceData.as<String>());
@@ -431,14 +431,14 @@ uint16_t MQTTController::getQueueSize() {
 }
 
 bool MQTTController::sendGatewayConnectEvent(const String &deviceName) {
-    DynamicJsonDocument data(200);
+    JsonDocument data;
     data["device"] = deviceName;
     data.shrinkToFit();
     return addToPublishQueue("v1/gateway/connect", deviceName);
 }
 
 bool MQTTController::sendGatewayDisConnectEvent(const String &deviceName) {
-    DynamicJsonDocument data(200);
+    JsonDocument data;
     data["device"] = deviceName;
     data.shrinkToFit();
     return addToPublishQueue("v1/gateway/disconnect", deviceName);
